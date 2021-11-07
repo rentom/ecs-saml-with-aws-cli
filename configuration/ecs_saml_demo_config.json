@@ -1,0 +1,22 @@
+{
+  "BASE": {
+    "logging_level": "info"
+  },
+  "SAML_IDP": {
+      "idp_sso_url": "https://10.246.154.22:9031/idp/startSSO.ping?PartnerSpId=urn%3Aecs%3A25e6de13-670c-43b0-92d8-21f4ad7ac386%3Awebservices"
+    },
+  "AWS_CONFIGURATION": {
+    "region": "US",
+    "output": "json",
+    "endpoint": "https://10.246.155.71:4443/sts"
+  },
+  "TEST_DATA_GENERATION": {
+    "generate_data": "N",
+    "bucketPrefix": "meta-data-bucket",
+    "objectPrefix": "object",
+    "objectContentTemplate": "This is a test of the emergency broadcast system test #",
+    "numberOfBuckets": "10",
+    "numberOfObjects": "10",
+    "userMetadataHeaderPrefix": "x-amx-metadata"
+  }
+}
