@@ -9,14 +9,5 @@
     "region": "US",
     "output": "json",
     "endpoint": ""
-  },
-  "TEST_DATA_GENERATION": {
-    "generate_data": "N",
-    "bucketPrefix": "meta-data-bucket",
-    "objectPrefix": "object",
-    "objectContentTemplate": "This is a test of the emergency broadcast system test #",
-    "numberOfBuckets": "10",
-    "numberOfObjects": "10",
-    "userMetadataHeaderPrefix": "x-amx-metadata"
   }
 }
