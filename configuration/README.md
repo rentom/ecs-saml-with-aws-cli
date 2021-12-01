@@ -31,4 +31,5 @@ We've provided a sample configuration file:
       region - This is the AWS Region
       output - This is the output format for AWS CLI commands
       endpoint - This is the endpoint that will be used with the AWS CLI commands to override to ECS
+      token_session_duration_seconds - This is the duration in seconds of the temporary token provided by the secure token service (STS)
 

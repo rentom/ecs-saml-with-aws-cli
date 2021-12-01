@@ -47,10 +47,13 @@ class ECSSAMLConfiguration(object):
         self.aws_region = parser[AWS_CONNECTION_CONFIG]['region']
         self.aws_output = parser[AWS_CONNECTION_CONFIG]['output']
         self.aws_endpoint = parser[AWS_CONNECTION_CONFIG]['endpoint']
+        self.aws_token_session_duration = parser[AWS_CONNECTION_CONFIG]['token_session_duration_seconds']
 
         # Validate AWS settings
         if not self.aws_endpoint:
             raise InvalidConfigurationException("The IAM Endpoint is not configured in the module configuration")
+        if not self.aws_token_session_duration:
+            raise InvalidConfigurationException("The IAM STS Token Session Duration is not configured in the module configuration")
 
         # Grab SAML IDP Settings
         self.saml_idp_url = parser[SAML_IDP_CONFIGURATION]['idp_sso_url']

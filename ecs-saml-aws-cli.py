@@ -36,13 +36,14 @@ _awsCli = list()
 
 
 class AWSDataCollection:
-    def __init__(self, method, logger, endpoint, tempdir, saml_assertion_input, index_role_to_assume_input):
+    def __init__(self, method, logger, endpoint, tempdir, saml_assertion_input, index_role_to_assume_input, token_session_duration):
         self.method = method
         self.logger = logger
         self.tempdir = tempdir
         self.endpoint = endpoint
         self.assertion = saml_assertion_input
         self.index_role_to_assume = index_role_to_assume_input
+        self.token_duration = token_session_duration
 
         logger.info(MODULE_NAME + '::AWSDataCollection()::init method of class called')
 
@@ -51,7 +52,7 @@ class AWSDataCollection:
 
             if self.method == 'aws_assume_role_saml':
                 # Make AWS CLI Call to assume role with SAML
-                aws_assume_role_saml(self.logger, self.endpoint, self.tempdir, self.assertion, self.index_role_to_assume)
+                aws_assume_role_saml(self.logger, self.endpoint, self.tempdir, self.assertion, self.index_role_to_assume, self.token_duration)
             else:
                 self.logger.info(MODULE_NAME + '::AWSDataCollection()::Requested method ' +
                                  self.method + ' is not supported.')
@@ -96,7 +97,7 @@ def ecs_config(config, temp_dir):
                                     'exception occured: ' + str(e) + "\n" + traceback.format_exc())
 
 
-def aws_assume_role_saml(logger, endpoint, tempdir, assertion, index_of_role_to_assume):
+def aws_assume_role_saml(logger, endpoint, tempdir, assertion, index_of_role_to_assume, token_duration):
     global _stsAccessKeyId
     global _stsSecretKey
     global _stsSessionToken
@@ -108,10 +109,10 @@ def aws_assume_role_saml(logger, endpoint, tempdir, assertion, index_of_role_to_
         try:
             print("\n")
             print("About to run the following AWS CLI Command:")
-            print('aws sts assume-role-with-saml --role-arn ' + assertion.roles[index_of_role_to_assume] + ' --principal-arn ' + assertion.providers[index_of_role_to_assume] + ' --saml-assertion ' + assertion_saml + ' --endpoint-url=' + endpoint + ' --no-verify-ssl')
+            print('aws sts assume-role-with-saml --role-arn ' + assertion.roles[index_of_role_to_assume] + ' --principal-arn ' + assertion.providers[index_of_role_to_assume] + ' --saml-assertion ' + assertion_saml + ' --endpoint-url=' + endpoint + ' --no-verify-ssl' + '--duration-seconds' + token_duration)
             print("\n")
 
-            process = subprocess.run(['aws', 'sts', 'assume-role-with-saml', '--role-arn', assertion.roles[index_of_role_to_assume], '--principal-arn', assertion.providers[index_of_role_to_assume], '--saml-assertion', assertion_saml, '--endpoint-url=' + endpoint, '--no-verify-ssl', '--debug'], check=True, stdout=subprocess.PIPE, encoding='utf-8')
+            process = subprocess.run(['aws', 'sts', 'assume-role-with-saml', '--role-arn', assertion.roles[index_of_role_to_assume], '--principal-arn', assertion.providers[index_of_role_to_assume], '--saml-assertion', assertion_saml, '--endpoint-url=' + endpoint, '--no-verify-ssl', '--duration-seconds', token_duration, '--debug'], check=True, stdout=subprocess.PIPE, encoding='utf-8')
             process.check_returncode()
             assume_role_with_saml_data = json.loads(process.stdout)
         except subprocess.CalledProcessError:
@@ -392,7 +393,7 @@ if __name__ == "__main__":
                     print("The role entered does not exist in the SAML Assertion.\r\n")
                     continue
                 else:
-                    if AWSDataCollection("aws_assume_role_saml", log_it, _configuration.aws_endpoint, tempFilePath, saml_assertion, index_of_role_to_assume):
+                    if AWSDataCollection("aws_assume_role_saml", log_it, _configuration.aws_endpoint, tempFilePath, saml_assertion, index_of_role_to_assume, _configuration.aws_token_session_duration):
                         # The SAML assertion call completed now lets generate the AWS CLI Profile
                         aws_generate_temp_credentials_profile()
                         break

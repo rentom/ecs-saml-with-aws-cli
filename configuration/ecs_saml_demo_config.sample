@@ -8,6 +8,7 @@
   "AWS_CONFIGURATION": {
     "region": "US",
     "output": "json",
-    "endpoint": ""
+    "endpoint": "",
+    "token_session_duration_seconds": "3600"
   }
 }
