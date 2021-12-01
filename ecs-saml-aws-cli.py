@@ -112,7 +112,7 @@ def aws_assume_role_saml(logger, endpoint, tempdir, assertion, index_of_role_to_
             print('aws sts assume-role-with-saml --role-arn ' + assertion.roles[index_of_role_to_assume] + ' --principal-arn ' + assertion.providers[index_of_role_to_assume] + ' --saml-assertion ' + assertion_saml + ' --endpoint-url=' + endpoint + ' --no-verify-ssl' + '--duration-seconds' + token_duration)
             print("\n")
 
-            process = subprocess.run(['aws', 'sts', 'assume-role-with-saml', '--role-arn', assertion.roles[index_of_role_to_assume], '--principal-arn', assertion.providers[index_of_role_to_assume], '--saml-assertion', assertion_saml, '--endpoint-url=' + endpoint, '--no-verify-ssl', '--duration-seconds', token_duration, '--debug'], check=True, stdout=subprocess.PIPE, encoding='utf-8')
+            process = subprocess.run(['aws', 'sts', 'assume-role-with-saml', '--role-arn', assertion.roles[index_of_role_to_assume], '--principal-arn', assertion.providers[index_of_role_to_assume], '--saml-assertion', assertion_saml, '--endpoint-url=' + endpoint, '--no-verify-ssl', '--duration-seconds', token_duration], check=True, stdout=subprocess.PIPE, encoding='utf-8')
             process.check_returncode()
             assume_role_with_saml_data = json.loads(process.stdout)
         except subprocess.CalledProcessError:
