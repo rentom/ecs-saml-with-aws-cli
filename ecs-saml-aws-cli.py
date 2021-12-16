@@ -206,6 +206,13 @@ def ecs_ido_sso_login(username, password):
     sslverification = False
     formresponse = session.get(_configuration.saml_idp_url, verify=sslverification)
 
+    # Debug the response code if needed
+    #print(formresponse.status_code)
+
+    # Return logic - Seen the need for this in some Ping Federate environments
+    while formresponse.status_code == 401:
+        formresponse = session.get(formresponse.url)
+
     # Capture the idpauthformsubmiturl, which is the final url after all the 302s
     idpauthformsubmiturl = formresponse.url
 
@@ -251,7 +258,7 @@ def ecs_ido_sso_login(username, password):
         idpauthformsubmiturl, data=payload, verify=sslverification)
 
     # Debug the response if needed
-    # print (response.text)
+    #print(response.text)
 
     # Overwrite and delete the credential variables, just for safety
     username = '##############################################'
