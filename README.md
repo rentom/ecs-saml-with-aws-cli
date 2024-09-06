@@ -9,4 +9,7 @@ This app was tested with the following installed:
     - lxml
 - AWS CLI 2.1.17
 
-
+If you want to, you can try to avoid that `aws` are making calls to AWS Instance Metadata Service(at 169.254.169.254). with the following environment variable: 
+```
+export AWS_EC2_METADATA_DISABLED=true
+```

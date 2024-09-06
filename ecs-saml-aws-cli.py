@@ -109,15 +109,16 @@ def aws_assume_role_saml(logger, endpoint, tempdir, assertion, index_of_role_to_
         try:
             print("\n")
             print("About to run the following AWS CLI Command:")
-            print('aws sts assume-role-with-saml --role-arn ' + assertion.roles[index_of_role_to_assume] + ' --principal-arn ' + assertion.providers[index_of_role_to_assume] + ' --saml-assertion ' + assertion_saml + ' --endpoint-url=' + endpoint + ' --no-verify-ssl' + '--duration-seconds' + token_duration)
+            print('aws sts assume-role-with-saml --role-arn ' + assertion.roles[index_of_role_to_assume] + ' --principal-arn ' + assertion.providers[index_of_role_to_assume] + ' --saml-assertion ' + assertion_saml + ' --endpoint-url ' + endpoint + ' --no-verify-ssl' + ' --duration-seconds ' + token_duration)
             print("\n")
 
-            process = subprocess.run(['aws', 'sts', 'assume-role-with-saml', '--role-arn', assertion.roles[index_of_role_to_assume], '--principal-arn', assertion.providers[index_of_role_to_assume], '--saml-assertion', assertion_saml, '--endpoint-url=' + endpoint, '--no-verify-ssl', '--duration-seconds', token_duration], check=True, stdout=subprocess.PIPE, encoding='utf-8')
+            process = subprocess.run(['aws', 'sts', 'assume-role-with-saml', '--role-arn', assertion.roles[index_of_role_to_assume], '--principal-arn', assertion.providers[index_of_role_to_assume], '--saml-assertion', assertion_saml, '--endpoint-url', endpoint, '--no-verify-ssl', '--duration-seconds', token_duration, '--debug'], check=True, stdout=subprocess.PIPE, encoding='utf-8')
             process.check_returncode()
             assume_role_with_saml_data = json.loads(process.stdout)
-        except subprocess.CalledProcessError:
+        except subprocess.CalledProcessError as error:
             logger.info(MODULE_NAME + '::aws_assume_role_saml()::Unable to perform AssumeRoleWithSAML '
                                       'for role ' + assertion.roles[index_of_role_to_assume] + ' and provider ' + assertion.providers[index_of_role_to_assume])
+            print(traceback.format_exc())
 
         if assume_role_with_saml_data is None:
             # If we had an issue just log the error and keep going to the next bucket
@@ -193,6 +194,13 @@ def aws_generate_temp_credentials_profile():
         _logger.error(MODULE_NAME + '::aws_generate_temp_credentials_profile::Unexpected error encountered. Cause: ' + str(ex))
 
 
+def file_write(filename, content):
+    # Open the file in write mode, which will overwrite any previous content
+    with open(filename, "w", encoding="utf-8") as f:
+        # Write the content to the file
+        f.write(content)
+
+
 def ecs_ido_sso_login(username, password):
     global _logger
     global _configuration
@@ -232,10 +240,13 @@ def ecs_ido_sso_login(username, password):
             payload[name] = username
         elif "pass" in name.lower():
             # Make an educated guess that this is the right field for the password
-            payload[name] = password
+            payload[name] = base64.b64decode(password).decode()
         else:
             # Simply populate the parameter with the existing value (picks up hidden fields in the login form)
             payload[name] = value
+
+    # Quick fix when AuthMethod is beeing wiped by another hidden input field in login page, and it turned out this one is really important.
+    payload["AuthMethod"] = "FormsAuthentication"
 
     # Debug the parameter payload if needed
     # Use with caution since this will print sensitive output to the screen
@@ -259,6 +270,7 @@ def ecs_ido_sso_login(username, password):
 
     # Debug the response if needed
     #print(response.text)
+    file_write("output.html", response.text)    
 
     # Overwrite and delete the credential variables, just for safety
     username = '##############################################'
@@ -281,7 +293,7 @@ def ecs_ido_sso_login(username, password):
     # Better error handling is required for production use.
     if assertion == '':
         _logger.error(MODULE_NAME + '::ecs_ido_sso_login()::The Identity Provider '
-                                    'did not return a valid SAML Assertion .')
+                                    'did not return a valid SAML Assertion.')
         return None
 
     # Debug only
@@ -372,7 +384,7 @@ if __name__ == "__main__":
         # Gather credentials and IDP URL
         print("Enter Active Directory User:")
         username = input()
-        password = getpass.getpass()
+        password = base64.b64encode(getpass.getpass().encode())
         print('')
 
         # Perform the SSO login to the IDP and process the assertion
